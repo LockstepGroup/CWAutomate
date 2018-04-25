@@ -25,12 +25,18 @@ class CwaServer {
     }
 
     # Generate Api URL
-    [String] getApiUrl([string]$UrlPostfix,[string]$ConditionString) {
+    [String] getApiUrl([string]$UrlPostfix,[hashtable]$QueryHashTable) {
+        if ($QueryHashTable) {
+            $QueryHashTable.pagesize = 1000
+        } else {
+            $QueryHashTable = @{}
+            $QueryHashTable.pagesize = 1000
+        }
+
+        $QueryString = [HelperWeb]::createQueryString($QueryHashTable)
+
         if ($this.Address) {
-            $url = "https://" + $this.Address + "/cwa/api/v1/" + $UrlPostfix + "?pagesize=1000"
-            if ($ConditionString) {
-                $url += '&condition=' + $ConditionString
-            }
+            $url = "https://" + $this.Address + "/cwa/api/v1/" + $UrlPostfix + $QueryString
             return $url
         } else {
             return $null
@@ -56,8 +62,8 @@ class CwaServer {
     }
 
     # Keygen API Query
-    [psobject] invokeGetQuery([string]$UrlPostfix,[string]$ConditionString) {
-        $Url    = $this.getApiUrl($UrlPostfix,$ConditionString)
+    [psobject] invokeGetQuery([string]$UrlPostfix,[hashtable]$QueryHashTable) {
+        $Url    = $this.getApiUrl($UrlPostfix,$QueryHashTable)
         $result = $this.invokeApiQuery('GET',$url,$null)
 
         return $result
@@ -73,6 +79,8 @@ class CwaServer {
         $params.ContentType = 'application/json'
         $params.Body        = $Body
 
+        $this.UrlHistory += $Url
+
         # Check for token generation url
         if ($Url -match 'apitoken') {
             $queryResult = Invoke-RestMethod @params
@@ -84,6 +92,8 @@ class CwaServer {
             $queryResult  = Invoke-RestMethod @params
             $returnObject = $queryResult
         }
+
+        
         return $returnObject
     }
 }
