@@ -27,13 +27,13 @@ function Get-AutomateComputer {
     PROCESS {
 
         if (!($ConditionString)) {
-            $ConditionString = ""
             if ($ClientId) {
-                $ConditionString += "client.id = $ClientId"
+                $ConditionHash = @{}
+                $ConditionHash.condition = "client.id = $ClientId"
             }
         }
 
-        $ReturnObject = $global:AutomateServer.invokeGetQuery('Computers',$ConditionString)
+        $ReturnObject = $global:AutomateServer.invokeGetQuery('Computers',$ConditionHash)
         $ReturnObject
     }
 }
